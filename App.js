@@ -1,308 +1,222 @@
-// regular expression for validation
-const strRegex =  /^[a-zA-Z\s]*$/; // containing only letters
-const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
-/* supports following number formats - (123) 456-7890, (123)456-7890, 123-456-7890, 123.456.7890, 1234567890, +31636363634, 075-63546725 */
-const digitRegex = /^\d+$/;
+let taskHeading = document.querySelector(".task-heading");
+let input = document.querySelector(".add-input");
+let button = document.querySelector(".add-btn");
+const containerList = document.querySelector(".container-list");
+const modle_container = document.querySelector('.modle-container');
 
-// -------------------------------------------------- //
+input.setAttribute("placeholder", "Please Enter Task");
 
-const countryList = document.getElementById('country-list');
-const fullscreenDiv = document.getElementById('fullscreen-div');
-const modal = document.getElementById('modal');
-const addBtn = document.getElementById('add-btn');
-const closeBtn = document.getElementById('close-btn');
-const modalBtns = document.getElementById('modal-btns');
-const form = document.getElementById('modal');
-const addrBookList = document.querySelector('#addr-book-list');
 
-// -------------------------------------------------- //
-let addrName = streetAddr = labels = "";
-
-// Address class
-class Address{
-    constructor(id, addrName, streetAddr,labels){
-        this.id = id;
-        this.addrName = addrName;
-        this.streetAddr = streetAddr;
-        this.labels = labels;
+function addTask() {
+    if(input.value === "") {
+        alert("please enter task");
     }
+    else {
+    let inputValue = input.value;
 
-    static getAddresses(){
-        let addresses;
-        if(localStorage.getItem('addresses') == null){
-            addresses = [];
-        } else {
-            addresses = JSON.parse(localStorage.getItem('addresses'));
-        }
-        return addresses;
-    }
+    const openList = document.createElement('div');
+    openList.classList = "container-list1-item";
+    const nameOfTask = document.createElement('h4');
+    nameOfTask.innerText = inputValue;
+    const descriptionOfTask = document.createElement('p');
+    descriptionOfTask.classList = "description";
+    // const desDiv = document.createElement('div');
+    // desDiv.classList = "desc-div";
+    // desDiv.appendChild(descriptionOfTask);
 
-    static addAddress(address){
-        const addresses = Address.getAddresses();
-        addresses.push(address);
-        localStorage.setItem('addresses', JSON.stringify(addresses));
-    }
+    const deleteTask = document.createElement('button');
+    deleteTask.classList = "delete";
+    deleteTask.innerText = "";
+    const itemColor = document.createElement('div');
+    itemColor.classList.add('item-color');
+    openList.appendChild(itemColor);
+    // const descBtn = document.createElement('div');
+    // descBtn.classList.add('desc-btn');
+    // // add paragraph using modal
+    // descriptionOfTask.appendChild(descBtn);
+    // descBtn.addEventListener('click', function () {
+    //     openList.remove();
+    // });
 
-    static deleteAddress(id){
-        const addresses = Address.getAddresses();
-        addresses.forEach((address, index) => {
-            if(address.id == id){
-                addresses.splice(index, 1);
-            }
-        });
-        localStorage.setItem('addresses', JSON.stringify(addresses));
-        form.reset();
-        UI.closeModal();
-        addrBookList.innerHTML = "";
-        UI.showAddressList();
-    }
 
-    static updateAddress(item){
-        const addresses = Address.getAddresses();
-        addresses.forEach(address => {
-            if(address.id == item.id){
-                address.addrName = item.addrName;
-                address.streetAddr = item.streetAddr;
-                address.labels = item.labels;
-            }
-        });
-        localStorage.setItem('addresses', JSON.stringify(addresses));
-        addrBookList.innerHTML = "";
-        UI.showAddressList();
-    }
-}
 
-// UI class
-class UI{
-    static showAddressList(){
-        const addresses = Address.getAddresses();
-        addresses.forEach(address => UI.addToAddressList(address));
-        const notes = document.querySelectorAll('.note');
-        const conts = document.querySelectorAll('#container');
-        let selcon = "start";
-        notes.forEach(ele => {
-                ele.addEventListener('dragstart' , ()=>{
-                    ele.classList.add("drag")
-                })
-                ele.addEventListener('dragend' , ()=>{
-                    location.reload();
-                    ele.classList.remove("drag");
-                    let newadd , newdes;
-                    addresses.forEach(e => {
-                        if(e.id == ele.dataset.id){
-                            newadd = e.addrName;
-                            newdes = e.streetAddr;
-                        }
-                    })
-                     const addressItem = new Address(ele.dataset.id, newadd, newdes , selcon);
-                     Address.updateAddress(addressItem);
-                    
-                })
-                conts.forEach(ele => {
-                    ele.addEventListener('dragover' , () => {
-                        const tarCon = document.querySelector('.drag');
-                        ele.appendChild(tarCon);
-                        selcon = ele.className;
-                    })
-            })
+    openList.append(nameOfTask, descriptionOfTask, deleteTask)
+    containerList.appendChild(openList);
+
+    deleteTask.addEventListener('click', (e) => {
+        e.stopPropagation()
+        openList.remove();
+    })
+    editModel(openList, nameOfTask, descriptionOfTask);
+    input.value = null;
+
+    openList.setAttribute("draggable", "true");
+    openList.addEventListener('dragstart', () => {
+        openList.classList.add('dragging');
+    });
+    openList.addEventListener('dragend', () => {
+        openList.classList.remove('dragging');
+    });
+
+    const listcontainer = document.querySelectorAll('.container-list');
+    listcontainer.forEach((list) => {
+        list.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const draggingElm = document.querySelector('.dragging');
+            list.appendChild(draggingElm);
         })
-    }
-
-    static addToAddressList(address){
-        const tableRow = document.createElement('div');
-        tableRow.setAttribute('data-id', address.id);
-        tableRow.innerHTML = `
-        <div id="note-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dot" viewBox="0 0 16 16">
-            <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
-        </svg>
-        <div class="note" id="note" data-id=${address.id} draggable="true" > 
-        <p><span class = "addressing-name">${address.addrName}</span></p>
-       </div>
-       </div>
-        `;
-        if(address.labels === "start"){
-            document.querySelector('.start').appendChild(tableRow);
-        }else if(address.labels === "process"){
-            document.querySelector('.process').appendChild(tableRow);
-        }else if(address.labels === "reviwe"){
-            document.querySelector('.reviwe').appendChild(tableRow);
-        }else{
-            document.querySelector('.done').appendChild(tableRow);
-        }
-      
-
-    }
-
-    static showModalData(id){
-        const addresses = Address.getAddresses();
-        addresses.forEach(address => {
-            if(address.id == id){
-                form.addr_ing_name.value = address.addrName;
-                form.street_addr.value = address.streetAddr;
-                form.labels.value = address.labels;
-                document.getElementById('modal-title').innerHTML = "Change Address Details";
-
-                document.getElementById('modal-btns').innerHTML = `
-                    <button type = "submit" id = "update-btn" data-id = "${id}">Update </button>
-                    <button type = "button" id = "delete-btn" data-id = "${id}">Delete </button>
-                `;
-            }
-        });
-    }
-
-    static showModal(){
-        modal.style.display = "block";
-        fullscreenDiv.style.display = "block";
-    }
-
-    static closeModal(){
-        modal.style.display = "none";
-        fullscreenDiv.style.display = "none";
-    }
-
-
+    })
 
 }
-
-// DOM Content Loaded
-window.addEventListener('DOMContentLoaded', () => {
-    loadJSON(); // loading country list from json file
-    eventListeners();
-    UI.showAddressList();
-});
-
-// event listeners
-function eventListeners(){
-    // show add item modal
-    addBtn.addEventListener('click', () => {
-        form.reset();
-        document.getElementById('modal-title').innerHTML = "Add Address";
-        UI.showModal();
-        document.getElementById('modal-btns').innerHTML = `
-            <button type = "submit" id = "save-btn"> Save </button>
-        `;
-    });
-
-    // close add item modal
-    closeBtn.addEventListener('click', UI.closeModal);
-
-    // add an address item
-    modalBtns.addEventListener('click', (event) => {
-        event.preventDefault();
-        if(event.target.id == "save-btn"){
-            let isFormValid = getFormData();
-            if(!isFormValid){
-                form.querySelectorAll('input').forEach(input => {
-                    setTimeout(() => {
-                        input.classList.remove('errorMsg');
-                    }, 1500);
-                });
-            } else {
-                let allItem = Address.getAddresses();
-                let lastItemId = (allItem.length > 0) ? allItem[allItem.length - 1].id : 0;
-                lastItemId++;
-
-                const addressItem = new Address(lastItemId, addrName, streetAddr,labels);
-                Address.addAddress(addressItem);
-                UI.closeModal();
-                UI.addToAddressList(addressItem);
-                form.reset();
-            }
-        }
-    });
-
-    // table row items
-    addrBookList.addEventListener('click', (event) => {
-        UI.showModal();
-        let trElement;
-        if(event.target.parentElement.tagName == "P"){
-            trElement = event.target.parentElement.parentElement;
-        }
-
-        if(event.target.parentElement.tagName == "DIV"){
-            trElement = event.target.parentElement;
-        }
-        let viewID = trElement.dataset.id;
-        UI.showModalData(viewID);
-    });
-
-    // delete an address item
-    modalBtns.addEventListener('click', (event) => {
-        if(event.target.id == 'delete-btn'){
-            Address.deleteAddress(event.target.dataset.id);
-        }
-    });
-
-    // update an address item
-    modalBtns.addEventListener('click', (event) => {
-        event.preventDefault();
-        location.reload();
-        if(event.target.id == "update-btn"){
-            let id = event.target.dataset.id;
-            let isFormValid = getFormData();
-            if(!isFormValid){
-                form.querySelectorAll('input').forEach(input => {
-                    setTimeout(() => {
-                        input.classList.remove('errorMsg');
-                    }, 1500);
-                });
-            } else {
-                const addressItem = new Address(id, addrName, streetAddr, labels);
-                Address.updateAddress(addressItem);
-                UI.closeModal();
-                form.reset();
-            }
-        }
-        
-    });
 }
 
+function editModel(div, ip, des) {
+    div.addEventListener('dblclick', (e) => {
+        e.stopPropagation()
+        const storeDiv = document.createElement('div');
+        storeDiv.classList = "modle-container-style"
+        const taskLable = document.createElement('lable');
+        taskLable.innerText = "Task Name";
+        const descriptionLable = document.createElement('lable');
+        descriptionLable.innerText = "Description";
 
-// load countries list
-function loadJSON(){
-    fetch('countries.json')
-    .then(response => response.json())
-    .then(data => {
-        let html = "";
-        data.forEach(country => {
-            html += `
-                <option> ${country.country} </option>
-            `;
-        });
+        const inputTask = document.createElement('input');
+        inputTask.classList = "editInput";
+        inputTask.setAttribute('id', 'edit1');
+        inputTask.setAttribute('type', 'text');
+        inputTask.value = ip.innerText;
+
+        const textArea = document.createElement('textarea');
+        textArea.classList = "editInput"
+        textArea.setAttribute('cols', '5');
+        textArea.setAttribute('rows', '5');
+        textArea.value = des.innerText;
+
+        // const closeBtn = document.createElement('&times;');
+        // closeBtn.classList = "close-btn";
+
+        const divButton = document.createElement('div');
+        divButton.classList = "buttonDiv";
+
+        const saveBtn = document.createElement('button');
+        saveBtn.innerText = 'save';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerText = 'close';
+
+        divButton.appendChild(saveBtn);
+        divButton.appendChild(deleteBtn);
+        storeDiv.append(taskLable, inputTask, descriptionLable, textArea, divButton)
+        modle_container.appendChild(storeDiv)
+
+        saveTheEditedValue(saveBtn, ip, des, storeDiv, inputTask, textArea, "save");
+        saveTheEditedValue(deleteBtn, ip, des, storeDiv, inputTask, textArea, "close")
+        console.log(div.childNodes);
     })
 }
 
-// get form data
-function getFormData(){
-    let inputValidStatus = [];
-    // console.log(form.addr_ing_name.value, form.first_name.value, form.last_name.value, form.email.value, form.phone.value, form.street_addr.value, form.postal_code.value, form.city.value, form.country.value, form.labels.value);
+function saveTheEditedValue(btnFun, child, des, mainDiv, input1, input2, condition) {
+    btnFun.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (condition === "save") {
+            child = input1.value;
+            des.innerText = input2.value;
+            mainDiv.remove();
+        } else {
+            mainDiv.remove();
+        }
 
-    if(!strRegex.test(form.addr_ing_name.value) || form.addr_ing_name.value.trim().length == 0){
-        addErrMsg(form.addr_ing_name);
-        inputValidStatus[0] = false;
-    } else {
-        addrName = form.addr_ing_name.value;
-        inputValidStatus[0] = true;
-    }
-
-   
-
-    if(!(form.street_addr.value.trim().length > 0)){
-        addErrMsg(form.street_addr);
-        inputValidStatus[1] = false;
-    } else {
-        streetAddr = form.street_addr.value;
-        inputValidStatus[1] = true;
-    }
-
-  
-    labels = form.labels.value;
-    return inputValidStatus.includes(false) ? false : true;
+    })
 }
+    // openList.setAttribute("draggable", "true");
+    // openList.addEventListener('dragstart', () => {
+    //     openList.classList.add('dragging');
+    // });
+    // openList.addEventListener('dragend', () => {
+    //     openList.classList.remove('dragging');
+    // });
+
+    // const listcontainer = document.querySelectorAll('.container-list');
+    // listcontainer.forEach((list) => {
+    //     list.addEventListener('dragover', (e) => {
+    //         e.preventDefault();
+    //         const draggingElm = document.querySelector('.dragging');
+    //         list.appendChild(draggingElm);
+    //     })
+    // })
+
+button.addEventListener('click', addTask)
+
+// button.addEventListener("click", function () {
+//   //console.log("hello");
+
+//   if(input.value === "") {
+//     alert("Please Fill This Field");
+//   }
+//   else {
+//   var containertList1Item = document.createElement('div');
+//   containertList1Item.classList.add('container-list1-item');
+//   containerList.appendChild(containertList1Item);
+
+//   let itemColor = document.createElement('div');
+//   itemColor.classList.add('item-color');
+//   containertList1Item.appendChild(itemColor);
+//   // if (containerList == containertList1Item) {
+//   //   itemColor.style.display = "#e75b4a";
+//   // }
+//   // if (containerList == )
+
+//   let itemHeading = document.createElement('div');
+//   itemHeading.classList.add('item-heading');
+//   containertList1Item.appendChild(itemHeading);
+
+//   let heading = document.createElement('h3');
+//   // heading.classList.add('task-heading');
+//   heading.innerText = input.value;
+//   itemHeading.appendChild(heading);
+//   input.value = '';
+
+//   const description = document.createElement('div');
+//   description.classList.add('description');
+//   containertList1Item.appendChild(description);
+
+//   const decsPara = document.createElement('div');
+//   decsPara.classList.add('desc-para');
+//   description.appendChild(decsPara);
+
+//   const para = document.createElement('p');
+//   para.classList.add('para');
+//   // add paragraph using modal
+//   decsPara.appendChild(para);
+
+//   var descBtn = document.createElement('div');
+//   descBtn.classList.add('desc-btn');
+//   // add paragraph using modal
+//   description.appendChild(descBtn);
+
+//   descBtn.addEventListener('click', function () {
+//     containertList1Item.remove();
+//   });
+//   // open modal
+
+//   containertList1Item.addEventListener('dblclick', function () {
+//     containertList1Item.setAttribute("data-bs-toggle", "modal");
+//     containertList1Item.setAttribute("data-bs-target", "#exampleModal");
 
 
-function addErrMsg(inputBox){
-    inputBox.classList.add('errorMsg');
-}
+//     const messageText = document.querySelector("#message-text");
+//     const addPara = document.querySelector("#add-para");
+//     const recipientName = document.querySelector("#recipient-name");
+
+//     addPara.addEventListener('click', function () {
+
+//       heading.innerText = recipientName.value;
+
+//       para.innerText = messageText.value;
+//     });
+//     // recipientName.value=' ';
+//     // messageText.value=' ';
+
+
+//   });
+  // DRAG START
